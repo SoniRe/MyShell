@@ -1,0 +1,29 @@
+EXIT_SUCCESS - Same as exit(0) but Guarantees work on Cross Platforms
+
+int main(int ac, char **av) -> Taking Argument and automatically making tokenList and storing in av, also ac for argument count
+
+execvp() - Replaces current process image with other
+Eg: 	char *args[] = {"ls", "-l", "/home", NULL};
+	execvp("ls", args);
+
+Enter The line : (Using getline)
+1) Parse It 
+2) Divide into tokens
+3) Create Vector of Tokens 
+
+readline(&buffer, &buffer_size) - Same as getline() provides editing , history and more perfect for shell
+
+size_t() - Unsigned Integer for Cross Platforms
+
+feof(FILE *stream) - Checks EOF reached if yes EOF Flag is set
+
+getcwd(buffer, buffer_size) - Gives the absolute path of current directory
+
+token = strtok(line, delimeter) - Gives back first token for the line/Command. 
+Using second time just use strtok(NULL, delimeter) as continues to get tokens from the same string
+
+Sentinel Value is NULL, at the end of tokensList. Eg: char *tokensList[] = {"ls", "-l", NULL};
+
+executeCommand(args) -> If Builtin shell(echo, env, exit just call) else fork() -> execvp() -> wait() 
+
+extern char **environ -> Used to find all environment variables
