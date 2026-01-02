@@ -132,27 +132,23 @@ char **splitIntoTokens(char *line) {
 
 char *myReadLine() {
     char *buff = NULL;
-    size_t size;
 
     char cwd[512];
     if(getcwd(cwd, sizeof(cwd)) == NULL) {
         perror(RED "getcwd Failed\n" RESET);
     }
 
-    printf(CYAN"☣️ %s>"RESET, cwd);
+    char prompt[1024];
+    snprintf(prompt, sizeof(prompt), "%s☣️ %s>%s", CYAN, cwd, RESET);
 
-    int nread = getline(&buff, &size, stdin);
+    buff = readline(prompt);
 
-    if(nread > 0 && buff[nread - 1] == '\n') buff[nread - 1] = '\0';
+    if(buff && *buff) {
+        add_history(buff);
+    }
 
-    if(nread == -1) {
-        free(buff);
-        buff = NULL;
-
-        if(feof(stdin) == 1)
-        printf(RED"End Of File\n"RESET); 
-        else 
-        printf(RED"Getline Failed\n"RESET);
+    if(buff == NULL) {
+        printf(RED"End Of File (or) Error Occurred\n"RESET); 
     }
 
     return buff;

@@ -4,6 +4,8 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #define RED "\033[31m" 
 #define VIOLET "\033[35m" 
