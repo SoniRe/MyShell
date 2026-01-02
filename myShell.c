@@ -42,13 +42,57 @@ void executeExit(char **args) {
     exit(EXIT_SUCCESS);
 }
 
+int checkAddRedirection(char **args) {
+    int redirectType = -1; // -1: none, 0: input, 1: output, 2: stderr
+
+    for(int i = 0;args[i]; i++) {
+        if(strcmp(args[i], "<") == 0) {
+            redirectType = 0;
+            args[i] = NULL;
+            int file = open(args[i + 1], O_RDONLY, 0777);
+            dup2(file, STDIN_FILENO);
+            close(file);
+            break;
+        }
+        else if(strcmp(args[i], ">") == 0) {
+            redirectType = 1;
+            args[i] = NULL;
+            int file = open(args[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+            dup2(file, STDOUT_FILENO);
+            close(file);
+            break;
+        }
+        else if(strcmp(args[i], ">>") == 0) {
+            redirectType = 2;
+            args[i] = NULL;
+            int file = open(args[i + 1], O_WRONLY | O_CREAT | O_APPEND, 0777);
+            dup2(file, STDOUT_FILENO);
+            close(file);
+            break;
+        }
+    }
+
+    return redirectType;
+}
+
 void executeCommand(char **args) {
+    //For I/O Redirects
+    int saved_stdin = dup(STDIN_FILENO);
+    int saved_stdout = dup(STDIN_FILENO);
+
+    int redirectType = checkAddRedirection(args);
+
     char *cur;
     int i = 0;
 
     while(cur = arrayBuiltin[i].builtin_name) {
         if(strcmp(cur, args[0]) == 0) {
             (arrayBuiltin[i].ptr)(args);
+            
+            dup2(saved_stdin, STDIN_FILENO);
+            dup2(saved_stdout, STDOUT_FILENO);
+            close(saved_stdin);
+            close(saved_stdout);
             return;
         }
         i++;
@@ -63,8 +107,13 @@ void executeCommand(char **args) {
             printf(RED "MyShell Failed" RESET": No such file or Directory\n");
         }
     }
-    else 
+    else {
         wait(&status);
+        dup2(saved_stdin, STDIN_FILENO);
+        dup2(saved_stdout, STDOUT_FILENO);
+        close(saved_stdin);
+        close(saved_stdout);
+    }
 }
 
 char **splitIntoTokens(char *line) {

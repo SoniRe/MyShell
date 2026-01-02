@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define RED "\033[31m" 
 #define VIOLET "\033[35m" 
