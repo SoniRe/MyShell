@@ -55,3 +55,8 @@ Doesn't include \n as input, breaks when pressed enter comes with tab completion
 
 Pipes -> 
 
+1) Split Arguements into Commands
+2) Create Pipe and Connect them with int fd[2]; -> fd[0] is read, fd[1] is write 
+3) Create Child Process for each command and execute commands
+4) Wait for all children in parent
+5) Free allocated resources
