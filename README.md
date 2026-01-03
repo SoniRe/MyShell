@@ -19,10 +19,13 @@ This shell implementation supports the following functionalities:
   - Output redirection using `>`  
   - Input redirection using `<`  
   - Append output using `>>`
-  - <img width="1533" height="525" alt="IO Redirections" src="https://github.com/user-attachments/assets/025ed487-7a20-4142-b052-1c521b7ff744" />
+  - <img width="400" height="400" alt="IO Redirections" src="https://github.com/user-attachments/assets/025ed487-7a20-4142-b052-1c521b7ff744" />
 
 - Pipeline Support  
   - Chain multiple commands using the pipe operator `|`
+  - <img width="400" height="400" alt="Pipe" src="https://github.com/user-attachments/assets/cf3068fd-9448-406e-b201-689b09c9ee76" />
+  - <img width="400" height="400" alt="Pipes" src="https://github.com/user-attachments/assets/e28d449c-41b6-4b84-b375-39d3612cf7fd" />
+
 
 - Background Process Execution  
   - Run commands in the background using `&`
