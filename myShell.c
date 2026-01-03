@@ -42,6 +42,76 @@ void executeExit(char **args) {
     exit(EXIT_SUCCESS);
 }
 
+int checkPipe(char **args) {
+    int pipeCnt = 0;
+
+    for(int i = 0;args[i]; i++) {
+        if(strcmp(args[i], "|") == 0) pipeCnt++;
+    }
+
+    return pipeCnt;
+}
+
+void executePipe(char **args, int countPipe) {
+    char ***cmds = malloc((sizeof(char**) * (countPipe + 1)));
+    int index = 0;
+    cmds[index++] = args;
+
+    //Split into commands NULL terminated
+    for(int i = 1;args[i]; i++) {
+        if(strcmp(args[i], "|") == 0) {
+            args[i] = NULL;
+            cmds[index] = &args[i + 1];
+            index++;
+        }
+    }
+
+    int fd[countPipe][2];
+
+    //Initialize Pipes
+    for(int i = 0;i < countPipe; i++) {
+        if(pipe(fd[i]) < 0) {
+            perror(RED "Pipe Failed\n" RESET);
+            return;
+        }
+    }
+
+    //fork for all child process
+    for(int i = 0;i < countPipe + 1; i++) {
+        if(fork() == 0) {
+            //Child  Process
+
+            if(i > 0)
+                dup2(fd[i - 1][0], STDIN_FILENO);
+
+            if(i < countPipe + 1) 
+                dup2(fd[i][1], STDOUT_FILENO);
+
+            for(int k = 0;k < countPipe; k++) {
+                close(fd[k][0]);
+                close(fd[k][1]);
+            }
+
+            int ret = execvp(cmds[i][0], cmds[i]);
+            if(ret == -1) {
+                printf(RED "MyShell Failed" RESET": No such file or Directory\n");
+                _exit(EXIT_SUCCESS);
+            }
+        }
+    }
+
+    //Close all Pipes for Parent
+    for(int k = 0;k < countPipe; k++) {
+        close(fd[k][0]);
+        close(fd[k][1]);
+    }
+
+    //Wait for children
+    for(int i = 0;i < countPipe + 1; i++) wait(NULL);
+    
+    free(cmds);
+}
+
 int checkAddRedirection(char **args) {
     int redirectType = -1; // -1: none, 0: input, 1: output, 2: stderr
 
@@ -75,10 +145,11 @@ int checkAddRedirection(char **args) {
     return redirectType;
 }
 
+
 void executeCommand(char **args) {
     //For I/O Redirects
     int saved_stdin = dup(STDIN_FILENO);
-    int saved_stdout = dup(STDIN_FILENO);
+    int saved_stdout = dup(STDOUT_FILENO);
 
     int redirectType = checkAddRedirection(args);
 
@@ -133,7 +204,7 @@ char **splitIntoTokens(char *line) {
 char *myReadLine() {
     char *buff = NULL;
 
-    char cwd[512];
+    char cwd[256];
     if(getcwd(cwd, sizeof(cwd)) == NULL) {
         perror(RED "getcwd Failed\n" RESET);
     }
@@ -175,7 +246,12 @@ int main(int argc, char **argvc) {
         args = splitIntoTokens(line);
         
         // 3) exec
-        executeCommand(args);
+        //Before that check for Pipes and execute otherwise normal execution
+        int countPipe = 0;
+        if(countPipe = checkPipe(args)) 
+            executePipe(args, countPipe);
+        else 
+            executeCommand(args);
 
         // 4) free
         free(line);
