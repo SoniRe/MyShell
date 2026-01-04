@@ -73,3 +73,5 @@ Signal Handling (Ctrl + C, Ctrl + Z) ->
 Ctrl + C : Kills only child process not the terminal
 Ctrl + Z : Stops the child process execution only not the terminal
 
+Ignore Signals in Parent And default behaviour in children
+
