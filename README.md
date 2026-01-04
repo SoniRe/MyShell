@@ -1,3 +1,7 @@
+## Compile & Run
+1) ```gcc myShell.c -lreadline -o myShell```
+2) ```./myShell```
+
 ## Features
 
 This shell implementation supports the following functionalities:
