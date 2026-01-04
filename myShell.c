@@ -42,15 +42,15 @@ void executeExit(char **args) {
     exit(EXIT_SUCCESS);
 }
 
-int checkPipe(char **args) {
-    int pipeCnt = 0;
+// int checkPipe(char **args) {
+//     int pipeCnt = 0;
 
-    for(int i = 0;args[i]; i++) {
-        if(strcmp(args[i], "|") == 0) pipeCnt++;
-    }
+//     for(int i = 0;args[i]; i++) {
+//         if(strcmp(args[i], "|") == 0) pipeCnt++;
+//     }
 
-    return pipeCnt;
-}
+//     return pipeCnt;
+// }
 
 void executePipe(char **args, int countPipe, int isBackground) {
     char ***cmds = malloc((sizeof(char**) * (countPipe + 1)));
@@ -203,7 +203,7 @@ void executeCommand(char **args, int isBackground) {
     }
 }
 
-char **splitIntoTokens(char *line, int *isBackground) {
+char **splitIntoTokens(char *line, int *isBackground, int *countPipe) {
     char **tokenList;
     tokenList = malloc(512 * sizeof(*tokenList));
     int argc = 0;
@@ -213,6 +213,9 @@ char **splitIntoTokens(char *line, int *isBackground) {
             *isBackground = 1;
             tokenList[argc++] = NULL;
             break;
+        }
+        else if(strcmp(token, "|") == 0) {
+            *countPipe = *countPipe + 1;
         }
 
         tokenList[argc++] = token;
@@ -275,13 +278,12 @@ int main(int argc, char **argvc) {
 
         // 2) get tokens
         // lexing -> parsing -> evaluating
-        int isBackground = 0;
-        args = splitIntoTokens(line, &isBackground);
+        int isBackground = 0, countPipe = 0;
+        args = splitIntoTokens(line, &isBackground, &countPipe);
         
         // 3) exec
         //Before that check for Pipes and execute otherwise normal execution
-        int countPipe = 0;
-        if(countPipe = checkPipe(args)) 
+        if(countPipe) 
             executePipe(args, countPipe, isBackground);
         else 
             executeCommand(args, isBackground);
