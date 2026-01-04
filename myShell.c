@@ -92,6 +92,10 @@ void executePipe(char **args, int countPipe, int isBackground) {
                 close(fd[k][1]);
             }
 
+            //Restore default behavious in child process
+            signal(SIGINT, SIG_DFL);
+            signal(SIGTSTP, SIG_DFL);
+            
             int ret = execvp(cmds[i][0], cmds[i]);
             if(ret == -1) {
                 printf(RED "MyShell Failed" RESET": No such file or Directory\n");
@@ -109,13 +113,9 @@ void executePipe(char **args, int countPipe, int isBackground) {
     //Wait for children if Not Background Execution
     if(!isBackground)
         for(int i = 0;i < countPipe + 1; i++) wait(NULL);
-    else {
+    else 
         printf("[Background Pipeline]\n");
-        // rl_crlf();
-        // rl_on_new_line();
-        // rl_redisplay();
-    }   
-
+               
     free(cmds);
 }
 
@@ -181,6 +181,10 @@ void executeCommand(char **args, int isBackground) {
     pid_t pid = fork();
 
     if(pid == 0) {
+        //Restore default behavious in child process
+        signal(SIGINT, SIG_DFL);
+        signal(SIGTSTP, SIG_DFL);
+
         int ret = execvp(args[0], args); 
         if(ret == -1) {
             printf(RED "MyShell Failed" RESET": No such file or Directory\n");
@@ -189,12 +193,8 @@ void executeCommand(char **args, int isBackground) {
     else {
         if(!isBackground) 
             wait(&status);
-        else {
+        else 
             printf("[Background PID : %d]\n", pid);
-            // rl_crlf();
-            // rl_on_new_line();
-            // rl_redisplay();
-        }
         
         dup2(saved_stdin, STDIN_FILENO);
         dup2(saved_stdout, STDOUT_FILENO);
@@ -260,7 +260,12 @@ int main(int argc, char **argvc) {
          "  ╚═╝    ╚═╝     ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝    ╚═╝\n\n" RESET);      
                                                                                             
 
+    //Background Execution
     signal(SIGCHLD, SIG_IGN);
+
+    //Signaling using Ctrl + C, Ctrl + Z
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
 
     //REPL - Read Evaluate Print Loop
     // 1) get line
