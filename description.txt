@@ -60,3 +60,16 @@ Pipes ->
 3) Create Child Process for each command and execute commands
 4) Wait for all children in parent
 5) Free allocated resources
+
+Background Execution ->
+
+signal(SIGCHLD, SIG_IGN) , SIGCHLD -> Signal when child exited, SIG_IGN -> Ignore the signal
+signal(My_Signal, Handler);
+
+Use (&) at end to make background process.
+Eg: ls | wc -l &
+
+Signal Handling (Ctrl + C, Ctrl + Z) ->
+Ctrl + C : Kills only child process not the terminal
+Ctrl + Z : Stops the child process execution only not the terminal
+
