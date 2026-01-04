@@ -52,7 +52,7 @@ int checkPipe(char **args) {
     return pipeCnt;
 }
 
-void executePipe(char **args, int countPipe) {
+void executePipe(char **args, int countPipe, int isBackground) {
     char ***cmds = malloc((sizeof(char**) * (countPipe + 1)));
     int index = 0;
     cmds[index++] = args;
@@ -106,9 +106,16 @@ void executePipe(char **args, int countPipe) {
         close(fd[k][1]);
     }
 
-    //Wait for children
-    for(int i = 0;i < countPipe + 1; i++) wait(NULL);
-    
+    //Wait for children if Not Background Execution
+    if(!isBackground)
+        for(int i = 0;i < countPipe + 1; i++) wait(NULL);
+    else {
+        printf("[Background Pipeline]\n");
+        // rl_crlf();
+        // rl_on_new_line();
+        // rl_redisplay();
+    }   
+
     free(cmds);
 }
 
@@ -146,7 +153,7 @@ int checkAddRedirection(char **args) {
 }
 
 
-void executeCommand(char **args) {
+void executeCommand(char **args, int isBackground) {
     //For I/O Redirects
     int saved_stdin = dup(STDIN_FILENO);
     int saved_stdout = dup(STDOUT_FILENO);
@@ -171,15 +178,24 @@ void executeCommand(char **args) {
     
     //Not the Builtin Functions
     int status;
+    pid_t pid = fork();
 
-    if(fork() == 0) {
+    if(pid == 0) {
         int ret = execvp(args[0], args); 
         if(ret == -1) {
             printf(RED "MyShell Failed" RESET": No such file or Directory\n");
         }
     }
     else {
-        wait(&status);
+        if(!isBackground) 
+            wait(&status);
+        else {
+            printf("[Background PID : %d]\n", pid);
+            // rl_crlf();
+            // rl_on_new_line();
+            // rl_redisplay();
+        }
+        
         dup2(saved_stdin, STDIN_FILENO);
         dup2(saved_stdout, STDOUT_FILENO);
         close(saved_stdin);
@@ -187,12 +203,18 @@ void executeCommand(char **args) {
     }
 }
 
-char **splitIntoTokens(char *line) {
+char **splitIntoTokens(char *line, int *isBackground) {
     char **tokenList;
     tokenList = malloc(512 * sizeof(*tokenList));
     int argc = 0;
 
     for(char *token = strtok(line, DELIMETER); token; token = strtok(NULL, DELIMETER)) {
+        if(strcmp(token, "&") == 0) {
+            *isBackground = 1;
+            tokenList[argc++] = NULL;
+            break;
+        }
+
         tokenList[argc++] = token;
     }
 
@@ -238,20 +260,26 @@ int main(int argc, char **argvc) {
          "  ╚═╝    ╚═╝     ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝    ╚═╝\n\n" RESET);      
                                                                                             
 
+    signal(SIGCHLD, SIG_IGN);
+
     //REPL - Read Evaluate Print Loop
     // 1) get line
     while(line = myReadLine()) {
+        //Only Pressed Enter
+        if(line[0] == '\0') continue;
+
         // 2) get tokens
         // lexing -> parsing -> evaluating
-        args = splitIntoTokens(line);
+        int isBackground = 0;
+        args = splitIntoTokens(line, &isBackground);
         
         // 3) exec
         //Before that check for Pipes and execute otherwise normal execution
         int countPipe = 0;
         if(countPipe = checkPipe(args)) 
-            executePipe(args, countPipe);
+            executePipe(args, countPipe, isBackground);
         else 
-            executeCommand(args);
+            executeCommand(args, isBackground);
 
         // 4) free
         free(line);
